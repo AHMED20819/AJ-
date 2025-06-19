@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AJ Trendify - Login & Order</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
+    header {
+      background: #4a148c;
+      color: white;
+      padding: 10px;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      text-align: center;
+    }
+    section {
+      padding: 100px 20px 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+    .hidden {
+      display: none;
+    }
+    .product-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .product {
+      background: white;
+      padding: 10px;
+      width: calc(25% - 15px);
+      box-sizing: border-box;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    .product img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .product-name {
+      font-weight: bold;
+      margin: 8px 0;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #4a148c;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #6a1b9a;
+    }
+    .popup, .overlay {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+    }
+    .popup {
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      text-align: center;
+      border-radius: 10px;
+      border: 2px solid #4a148c;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    .overlay {
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+    .login-box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .image-modal, .image-overlay {
+      display: none;
+      position: fixed;
+      z-index: 1100;
+    }
+    .image-modal {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      max-width: 90%;
+      max-height: 90%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    .image-modal img {
+      max-width: 100%;
+      max-height: 70vh;
+    }
+    .image-overlay {
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+    }
+    .star {
+      color: #ccc;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .star.selected {
+      color: gold;
+    }
+    .review-container {
+      margin-top: 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+    .review-item {
+      border-top: 1px solid #eee;
+      padding-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<header><h2>AJ Trendify</h2></header>
+
+<section id="loginSection">
+  <div class="login-box">
+    <h3>Login to Access</h3>
+    <label>Username:</label>
+    <input type="text" id="usernameInput" placeholder="Enter Username">
+    <label>Password:</label>
+    <input type="password" id="passwordInput" placeholder="Enter Password">
+    <button onclick="checkLogin()">Login</button>
+  </div>
+</section>
+
+<section id="productSection" class="hidden">
+  <h3>Select Product</h3>
+  <input type="text" id="searchBar" placeholder="Search products..." onkeyup="filterProducts()">
+  <div class="product-grid" id="productGrid"></div>
+  <button onclick="scrollToForm()">Next: Fill Details</button>
+</section>
+
+<section id="formSection" class="hidden">
+  <h3>Fill Your Details</h3>
+  <label>Your Name:</label>
+  <input type="text" id="name">
+  <label>Phone Number:</label>
+  <input type="text" id="phone">
+  <label>Product Name:</label>
+  <input type="text" id="selectedProduct" readonly>
+  <label>Product Color:</label>
+  <input type="text" id="color">
+  <label>Size:</label>
+  <select id="sizeSelect"></select>
+  <label>Quantity:</label>
+  <input type="number" id="quantity" min="1" value="1">
+  <label>Product Price (₹):</label>
+  <input type="number" id="price" placeholder="Enter Price">
+  <label>Location/Address:</label>
+  <input type="text" id="location">
+  <label>Payment Option:</label>
+  <select id="payment">
+    <option>UPI</option>
+    <option>Cash</option>
+  </select>
+  <button onclick="confirmOrder()">Confirm Order</button>
+</section>
+
+<!-- Popup -->
+<div class="overlay" id="overlay"></div>
+<div class="popup" id="popup">
+  <h3>Thanks for your purchase!</h3>
+  <p>Your order has been placed successfully.</p>
+  <strong>AJ Trendify</strong><br><br>
+  <button onclick="closePopup()">Close</button>
+</div>
+
+<!-- Image Modal -->
+<div class="image-overlay" id="imgOverlay" onclick="closeImageModal()"></div>
+<div class="image-modal" id="imgModal">
+  <img id="modalImg" src="" alt="">
+  <div id="reviewSection"></div>
+</div>
+
+<script>
+  const productData = {
+    "T-Shirt": { img: "file:///C:/Users/Administrator/Downloads/t-shirt.webp", size: ["M", "L", "XL"] },
+    "Pants":   { img: "file:///C:/Users/Administrator/Downloads/t-shirt.webp", size: ["M", "L", "XL"] },
+    "Shirt":   { img: "file:///C:/Users/Administrator/Downloads/t-shirt.webp", size: ["M", "L", "XL"] },
+    "Bottle":  { img: "file:///C:/Users/Administrator/Downloads/t-shirt.webp", size: ["Free"] },
+    "Cap":     { img: "file:///C:/Users/Administrator/Downloads/t-shirt.webp", size: ["Free"] },
+    "Hoodie":  { img: "file:///C:/Users/Administrator/Downloads/t-shirt.webp", size: ["L", "XL"] },
+    "Watch":   { img: "file:///C:/Users/Administrator/Downloads/t-shirt.webp", size: ["Free"] },
+    "Shoes":   { img: "file:///C:/Users/Administrator/Downloads/t-shirt.webp", size: ["8", "9", "10"] }
+  };
+
+  let selectedProductName = "";
+
+  function checkLogin() {
+    const username = document.getElementById('usernameInput').value.trim().toLowerCase();
+    const password = document.getElementById('passwordInput').value;
+    if (username === "aj" && password === "aj123") {
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("productSection").classList.remove("hidden");
+      renderProducts();
+    } else {
+      alert("Invalid username or password.");
+    }
+  }
+
+  function renderProducts() {
+    const grid = document.getElementById("productGrid");
+    grid.innerHTML = "";
+    Object.keys(productData).forEach(name => {
+      const product = productData[name];
+      const div = document.createElement("div");
+      div.className = "product";
+      div.innerHTML = `
+        <img src="${product.img}" alt="${name}" onclick="openImageModal('${name}')">
+        <div class="product-name">${name}</div>
+        <button onclick="selectProduct('${name}')">Select</button>
+      `;
+      grid.appendChild(div);
+    });
+  }
+
+  function openImageModal(name) {
+    const modalImg = document.getElementById("modalImg");
+    modalImg.src = productData[name].img;
+    const reviews = JSON.parse(localStorage.getItem("reviews_" + name)) || [];
+    const reviewSection = document.getElementById("reviewSection");
+    reviewSection.innerHTML = `
+      <h4>${name}</h4>
+      <textarea placeholder="Write review..." id="review-${name}"></textarea>
+      <div data-rating="0">
+        <span class="star" onclick="rateStar(this, '${name}', 1)">★</span>
+        <span class="star" onclick="rateStar(this, '${name}', 2)">★</span>
+        <span class="star" onclick="rateStar(this, '${name}', 3)">★</span>
+        <span class="star" onclick="rateStar(this, '${name}', 4)">★</span>
+        <span class="star" onclick="rateStar(this, '${name}', 5)">★</span>
+      </div>
+      <button onclick="submitReview('${name}')">Submit Review</button>
+      <div class="review-container" id="reviews-${name}">
+        ${reviews.map(r => `<div class='review-item'>⭐${r.stars} - ${r.text}</div>`).join("")}
+      </div>
+    `;
+    document.getElementById("imgOverlay").style.display = "block";
+    document.getElementById("imgModal").style.display = "block";
+  }
+
+  function closeImageModal() {
+    document.getElementById("imgOverlay").style.display = "none";
+    document.getElementById("imgModal").style.display = "none";
+  }
+
+  function rateStar(starElem, productName, stars) {
+    const allStars = starElem.parentElement.querySelectorAll(".star");
+    allStars.forEach((s, i) => {
+      s.classList.toggle("selected", i < stars);
+    });
+    starElem.parentElement.dataset.rating = stars;
+  }
+
+  function submitReview(productName) {
+    const text = document.getElementById("review-" + productName).value.trim();
+    const stars = document.querySelector(`#review-${productName}`).nextElementSibling.dataset.rating || 0;
+    if (!text || stars == 0) return alert("Please enter review and select rating!");
+    let reviews = JSON.parse(localStorage.getItem("reviews_" + productName)) || [];
+    reviews.push({ text, stars });
+    localStorage.setItem("reviews_" + productName, JSON.stringify(reviews));
+    openImageModal(productName);
+  }
+
+  function filterProducts() {
+    const search = document.getElementById("searchBar").value.toLowerCase();
+    const allProducts = document.querySelectorAll(".product");
+    allProducts.forEach(p => {
+      const name = p.querySelector(".product-name").innerText.toLowerCase();
+      p.style.display = name.includes(search) ? "block" : "none";
+    });
+  }
+
+  function selectProduct(name) {
+    selectedProductName = name;
+    document.getElementById("selectedProduct").value = name;
+    const sizeDropdown = document.getElementById("sizeSelect");
+    sizeDropdown.innerHTML = "";
+    productData[name].size.forEach(size => {
+      const opt = document.createElement("option");
+      opt.text = size;
+      sizeDropdown.add(opt);
+    });
+    document.getElementById("formSection").classList.remove("hidden");
+    document.getElementById("formSection").scrollIntoView({ behavior: "smooth" });
+  }
+
+  function scrollToForm() {
+    if (!selectedProductName) {
+      alert("Please select a product first!");
+      return;
+    }
+    document.getElementById("formSection").classList.remove("hidden");
+    document.getElementById("formSection").scrollIntoView({ behavior: "smooth" });
+  }
+
+  function confirmOrder() {
+    const name = document.getElementById("name").value;
+    const phone = document.getElementById("phone").value;
+    const color = document.getElementById("color").value;
+    const qty = document.getElementById("quantity").value;
+    const price = document.getElementById("price").value;
+    const loc = document.getElementById("location").value;
+    const product = document.getElementById("selectedProduct").value;
+    const size = document.getElementById("sizeSelect").value;
+    const payment = document.getElementById("payment").value;
+
+    if (!name || !phone || !color || !qty || !loc || !product || !price) {
+      alert("Please fill all the fields!");
+      return;
+    }
+
+    const order = {
+      product,
+      size,
+      color,
+      qty,
+      price: `₹${price}`,
+      name,
+      phone,
+      location: loc,
+      payment,
+      time: new Date().toLocaleString()
+    };
+
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+    orders.push(order);
+    localStorage.setItem("orders", JSON.stringify(orders));
+
+    document.getElementById("overlay").style.display = "block";
+    document.getElementById("popup").style.display = "block";
+  }
+
+  function closePopup() {
+    document.getElementById("popup").style.display = "none";
+    document.getElementById("overlay").style.display = "none";
+    window.location.reload();
+  }
+</script>
+
+</body>
+</html>
